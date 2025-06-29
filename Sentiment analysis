@@ -1,0 +1,71 @@
+# Sentiment Analysis using TF-IDF and Logistic Regression
+
+# Step 1: Import Libraries
+import pandas as pd
+import numpy as np
+import re
+import string
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+
+# Step 2: Create Sample Dataset
+data = {
+    'review': [
+        "I love this product!", 
+        "Absolutely terrible. Waste of money.",
+        "It was okay, not the best but not the worst.",
+        "Fantastic quality, very satisfied.", 
+        "Worst experience ever.",
+        "I will buy this again.", 
+        "Not worth it.", 
+        "Totally amazing!",
+        "Could be better.", 
+        "Highly recommended!"
+    ],
+    'sentiment': [1, 0, 1, 1, 0, 1, 0, 1, 0, 1]  # 1 = Positive, 0 = Negative
+}
+df = pd.DataFrame(data)
+
+# Step 3: Preprocess Text
+def preprocess_text(text):
+    text = text.lower()  # Lowercase
+    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+    text = re.sub(r'\d+', '', text)      # Remove numbers
+    return text
+
+df['clean_review'] = df['review'].apply(preprocess_text)
+
+# Step 4: TF-IDF Vectorization
+vectorizer = TfidfVectorizer(stop_words='english')
+X = vectorizer.fit_transform(df['clean_review'])
+y = df['sentiment']
+
+# Step 5: Split into Train and Test Sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 6: Train Logistic Regression Model
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Step 7: Predictions
+y_pred = model.predict(X_test)
+
+# Step 8: Evaluation
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+print("Actual test labels:", y_test.tolist())
+print("Predicted labels:", y_pred.tolist())
+
+
+# Confusion Matrix Plot
+conf_matrix = confusion_matrix(y_test, y_pred)
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Purples')
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
